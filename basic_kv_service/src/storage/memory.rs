@@ -1,4 +1,4 @@
-use dashmap::{DashMap, mapref::one::Ref};
+use dashmap::{mapref::one::Ref, DashMap};
 
 use crate::{KvError, Kvpair, Storage, Value};
 
@@ -55,7 +55,7 @@ impl Storage for MemTable {
             .collect())
     }
 
-    fn get_iter(&self, _table: &str) -> Result<Box<dyn Iterator<Item=Kvpair>>, KvError> {
+    fn get_iter(&self, _table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
         todo!();
     }
 }

@@ -47,6 +47,8 @@ impl Kvpair {
     }
 }
 
+/// 1. 将String、&str 和 i64 转为Value
+/// ----------------------------------------
 /// 从 String 转换成 Value
 impl From<String> for Value {
     fn from(s: String) -> Self {
@@ -74,6 +76,8 @@ impl From<i64> for Value {
     }
 }
 
+/// 将Value、Vec<Kvpair>、KvError 转为CommandResponse
+/// ----------------------------------------
 /// 从 Value 转换成 CommandResponse
 impl From<Value> for CommandResponse {
     fn from(v: Value) -> Self {

@@ -1,8 +1,12 @@
+use std::sync::Arc;
+
+use tracing::debug;
+
 use crate::{
     command_request::RequestData, CommandRequest, CommandResponse, KvError, MemTable, Storage,
 };
-use std::sync::Arc;
-use tracing::debug;
+#[cfg(test)]
+use crate::{Kvpair, Value};
 
 mod command_service;
 
@@ -10,6 +14,17 @@ mod command_service;
 pub trait CommandService {
     /// 处理 Command，返回 Response
     fn execute(self, store: &impl Storage) -> CommandResponse;
+}
+
+// 从 Request 中得到 Response，目前处理 HGET/HGETALL/HSET
+pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
+    match cmd.request_data {
+        Some(RequestData::Hget(param)) => param.execute(store),
+        Some(RequestData::Hgetall(param)) => param.execute(store),
+        Some(RequestData::Hset(param)) => param.execute(store),
+        None => KvError::InvalidCommand("Request has no data".into()).into(),
+        _ => KvError::Internal("Not implemented".into()).into(),
+    }
 }
 
 /// Service 数据结构
@@ -48,23 +63,14 @@ impl<Store: Storage> Service<Store> {
     }
 }
 
-// 从 Request 中得到 Response，目前处理 HGET/HGETALL/HSET
-pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
-    match cmd.request_data {
-        Some(RequestData::Hget(param)) => param.execute(store),
-        Some(RequestData::Hgetall(param)) => param.execute(store),
-        Some(RequestData::Hset(param)) => param.execute(store),
-        None => KvError::InvalidCommand("Request has no data".into()).into(),
-        _ => KvError::Internal("Not implemented".into()).into(),
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use std::thread;
 
-    use super::*;
     use crate::{MemTable, Value};
+
+    use super::*;
 
     #[test]
     fn service_should_works() {
@@ -86,9 +92,6 @@ mod tests {
         assert_res_ok(res, &["v1".into()], &[]);
     }
 }
-
-#[cfg(test)]
-use crate::{Kvpair, Value};
 
 // 测试成功返回的结果
 #[cfg(test)]

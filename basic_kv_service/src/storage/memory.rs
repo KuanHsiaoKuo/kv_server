@@ -9,7 +9,7 @@ pub struct MemTable {
 }
 
 impl MemTable {
-    /// 创建一个缺省的 MemTable
+    /// 创建一个缺省的 MemTable, 一个空的HashMap
     pub fn new() -> Self {
         Self::default()
     }
@@ -19,6 +19,7 @@ impl MemTable {
         match self.tables.get(name) {
             Some(table) => table,
             None => {
+                // entry是rust中HashMap的基础方法，其使用起来比python字典的get方法有更多妙用
                 let entry = self.tables.entry(name.into()).or_default();
                 entry.downgrade()
             }

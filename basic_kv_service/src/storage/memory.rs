@@ -10,6 +10,11 @@ pub struct MemTable {
 
 impl MemTable {
     /// 创建一个缺省的 MemTable, 一个空的HashMap
+    /// MemTable {
+    //     tables: DashMap {
+    //         map: []
+    //     }
+    // }
     pub fn new() -> Self {
         Self::default()
     }
@@ -27,9 +32,11 @@ impl MemTable {
     }
 }
 
+/// 为MemTable实现Storage trait， 其实最后都是调用DashMap的方法
 impl Storage for MemTable {
     fn get(&self, table: &str, key: &str) -> Result<Option<Value>, KvError> {
         let table = self.get_or_create_table(table);
+        // 如果key存在，就返回克隆之后的值，否则返回None
         Ok(table.get(key).map(|v| v.value().clone()))
     }
 
@@ -56,8 +63,15 @@ impl Storage for MemTable {
             .collect())
     }
 
-    fn get_iter(&self, _table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
-        todo!();
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
+        // todo!();
+        let table = self.get_or_create_table(table);
+        let iter = table
+            .iter()
+            .map(|v| Kvpair::new(v.key(), v.value().clone()))
+            .collect::<Vec<_>>()
+            .into_iter();
+        Ok(Box::new(iter))
     }
 }
 

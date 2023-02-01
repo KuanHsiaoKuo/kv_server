@@ -27,7 +27,8 @@ mod tests {
     #[test]
     fn memtable_basic_interface_should_work() {
         let store = MemTable::new();
-        test_basi_interface(store);
+        test_basic_interface(store.clone());
+        test_get_iter(store);
     }
 
     #[test]
@@ -42,7 +43,7 @@ mod tests {
     //     test_get_iter(store);
     // }
 
-    fn test_basi_interface(store: impl Storage) {
+    fn test_basic_interface(store: impl Storage) {
         // 第一次 set 会创建 table，插入 key 并返回 None（之前没值）
         let v = store.set("t1", "hello".into(), "world".into());
         assert!(v.unwrap().is_none());
@@ -85,6 +86,24 @@ mod tests {
             ]
         )
     }
+
+    // fn test_get_iter(store: impl Storage) {
+    //     store.set("t2", "k1".into(), "v1".into()).unwrap();
+    //     store.set("t2", "k2".into(), "v2".into()).unwrap();
+    //     let mut data = store.get_iter("t2").unwrap();
+    //     for item in data {
+    //         println!("Key: {} value: {}", item.key, item.value())
+    //     }
+    //     // data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    //     //
+    //     // assert_eq!(
+    //     //     data,
+    //     //     vec![
+    //     //         Kvpair::new("k1", "v1".into()),
+    //     //         Kvpair::new("k2", "v2".into()),
+    //     //     ]
+    //     // )
+    // }
 
     #[allow(dead_code)]
     fn test_get_iter(store: impl Storage) {

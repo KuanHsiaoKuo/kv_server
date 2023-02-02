@@ -27,7 +27,8 @@ mod tests {
     #[test]
     fn memtable_basic_interface_should_work() {
         let store = MemTable::new();
-        test_basic_interface(store.clone());
+        // test_basic_interface(store.clone());
+        test_basic_interface(&store);
         test_get_iter(store);
     }
 
@@ -43,7 +44,7 @@ mod tests {
     //     test_get_iter(store);
     // }
 
-    fn test_basic_interface(store: impl Storage) {
+    fn test_basic_interface(store: &impl Storage) {
         // 第一次 set 会创建 table，插入 key 并返回 None（之前没值）
         let v = store.set("t1", "hello".into(), "world".into());
         assert!(v.unwrap().is_none());

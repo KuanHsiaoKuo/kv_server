@@ -15,6 +15,8 @@ async fn main() -> Result<()> {
     loop {
         let (stream, addr) = listener.accept().await?;
         info!("Client {:?} connected", addr);
+        /// tokio::spawn 之前，复制一份 service
+        /// while loop 中，使用 svc 来执行 cmd
         let svc = service.clone();
         tokio::spawn(async move {
             let mut stream =

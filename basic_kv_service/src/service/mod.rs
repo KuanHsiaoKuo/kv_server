@@ -29,6 +29,9 @@ pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {
 
 /// Service 数据结构
 pub struct Service<Store = MemTable> {
+    /// Service 只是用 Arc 包裹了 ServiceInner。
+    /// 这也是 Rust 的一个惯例，把需要在多线程下
+    /// clone 的主体和其内部结构分开，这样代码逻辑更加清晰。
     inner: Arc<ServiceInner<Store>>,
 }
 
@@ -52,6 +55,8 @@ impl<Store: Storage> Service<Store> {
         }
     }
 
+    /// execute() 方法目前就是调用了 dispatch，但它未来潜在可以做一些事件分发。
+    /// 这样处理体现了 SRP（Single Responsibility Principle）原则。
     pub fn execute(&self, cmd: CommandRequest) -> CommandResponse {
         debug!("Got request: {:?}", cmd);
         // TODO: 发送 on_received 事件

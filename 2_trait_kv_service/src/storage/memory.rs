@@ -1,5 +1,6 @@
+use dashmap::{DashMap, mapref::one::Ref};
+
 use crate::{KvError, Kvpair, Storage, StorageIter, Value};
-use dashmap::{mapref::one::Ref, DashMap};
 
 /// 使用 DashMap 构建的 MemTable，实现了 Storage trait
 #[derive(Clone, Debug, Default)]
@@ -59,19 +60,19 @@ impl Storage for MemTable {
             .collect())
     }
 
-    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item=Kvpair>>, KvError> {
         // 使用 clone() 来获取 table 的 snapshot
         let table = self.get_or_create_table(table).clone();
+        /// 我们需要有一个能够完全占有 table 的迭代器
+        /// 下面注释写法报错可以注意一下, 究其原因，table.iter() 使用了 table 的引用，
+        /// 我们返回 iter，但 iter 引用了作为局部变量的 table，所以无法编译通过
+        // let iter = table.iter().map(|v| Kvpair::new(v.key(), v.value().clone()));
         let iter = StorageIter::new(table.into_iter());
         Ok(Box::new(iter))
     }
 }
 
-impl From<(String, Value)> for Kvpair {
-    fn from(data: (String, Value)) -> Self {
-        Kvpair::new(data.0, data.1)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {

@@ -27,6 +27,7 @@ pub trait Storage {
     fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError>;
 }
 
+/// ----- Storate iterator Section
 /// 提供 Storage iterator，这样 trait 的实现者只需要
 /// 把它们的 iterator 提供给 StorageIter，然后它们保证
 /// next() 传出的类型实现了 Into<Kvpair> 即可
@@ -51,6 +52,18 @@ where
         self.data.next().map(|v| v.into())
     }
 }
+
+/// 还要为 DashMap 的 Iterator 每次调用 next()
+/// 得到的值 (String, Value) ，做个到 Kvpair 的转换
+impl From<(String, Value)> for Kvpair {
+    fn from(data: (String, Value)) -> Self {
+        Kvpair::new(data.0, data.1)
+    }
+}
+
+/// 使得 Storage trait 的实现者只需要提供它们自己的拥有所有权的 Iterator，
+/// 并对 Iterator 里的 Item 类型提供 Into<Kvpair>
+/// ----- Storate iterator Section
 
 #[cfg(test)]
 mod tests {

@@ -66,7 +66,25 @@ pub struct ServiceInner<Store> {
     on_after_send: Vec<fn()>,
 }
 
+/// 对应ServiceInner.into()
+impl<Store: Storage> From<ServiceInner<Store>> for Service<Store> {
+    fn from(inner: ServiceInner<Store>) -> Self {
+        Self {
+            inner: Arc::new(inner),
+        }
+    }
+}
+
+/// 将之前的Service改成ServiceInner
+/// 生成时会通过From/Into来进行转换。
+/// 将ServiceInner转为Service
 impl<Store: Storage> ServiceInner<Store> {
+    // pub fn new(store: Store) -> Self {
+    //     Self {
+    //         inner: Arc::new(ServiceInner { store }),
+    //     }
+    // }
+    // 将之前的new方法修改为加上链式调用的形式
     pub fn new(store: Store) -> Self {
         Self {
             store,
@@ -77,6 +95,9 @@ impl<Store: Storage> ServiceInner<Store> {
         }
     }
 
+    /// 诸如 fn_xxx() 这样的方法有什么魔力呢？它为什么可以一路做链式调用呢？
+    /// ----------------------------
+    /// 答案很简单，它把 self 的所有权拿过来，处理完之后，再返回 self。
     pub fn fn_received(mut self, f: fn(&CommandRequest)) -> Self {
         self.on_received.push(f);
         self
@@ -98,13 +119,6 @@ impl<Store: Storage> ServiceInner<Store> {
     }
 }
 
-impl<Store: Storage> From<ServiceInner<Store>> for Service<Store> {
-    fn from(inner: ServiceInner<Store>) -> Self {
-        Self {
-            inner: Arc::new(inner),
-        }
-    }
-}
 
 impl<Store: Storage> Service<Store> {
     pub fn execute(&self, cmd: CommandRequest) -> CommandResponse {
@@ -184,6 +198,11 @@ mod tests {
             info!("Data is sent");
         }
 
+        // 从测试代码中可以看到，我们希望通过 ServiceInner 结构，
+        // 不断调用 fn_xxx 方法，为 ServiceInner 注册相应的事件处理函数；
+        // 添加完毕后，通过 into() 方法，我们再把 ServiceInner 转换成 Service
+        // 这是一个经典的构造者模式（Builder Pattern），
+        // 在很多 Rust 代码中，都能看到它的身影。
         let service: Service = ServiceInner::new(MemTable::default())
             .fn_received(|_: &CommandRequest| {})
             .fn_received(b)

@@ -63,9 +63,9 @@ impl Storage for MemTable {
     fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item=Kvpair>>, KvError> {
         // 使用 clone() 来获取 table 的 snapshot
         let table = self.get_or_create_table(table).clone();
-        /// 我们需要有一个能够完全占有 table 的迭代器
-        /// 下面注释写法报错可以注意一下, 究其原因，table.iter() 使用了 table 的引用，
-        /// 我们返回 iter，但 iter 引用了作为局部变量的 table，所以无法编译通过
+        // 我们需要有一个能够完全占有 table 的迭代器
+        // 下面注释写法报错可以注意一下, 究其原因，table.iter() 使用了 table 的引用，
+        // 我们返回 iter，但 iter 引用了作为局部变量的 table，所以无法编译通过
         // let iter = table.iter().map(|v| Kvpair::new(v.key(), v.value().clone()));
         let iter = StorageIter::new(table.into_iter());
         Ok(Box::new(iter))

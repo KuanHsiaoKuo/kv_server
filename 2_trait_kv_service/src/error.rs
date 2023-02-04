@@ -1,5 +1,6 @@
-use crate::Value;
 use thiserror::Error;
+
+use crate::Value;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum KvError {

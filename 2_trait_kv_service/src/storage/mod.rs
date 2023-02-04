@@ -1,10 +1,10 @@
-mod memory;
-mod sleddb;
-
 pub use memory::MemTable;
 pub use sleddb::SledDb;
 
 use crate::{KvError, Kvpair, Value};
+
+mod memory;
+mod sleddb;
 
 /// 对存储的抽象，我们不关心数据存在哪儿，但需要定义外界如何和存储打交道
 pub trait Storage {
@@ -24,7 +24,7 @@ pub trait Storage {
     /// 遍历 HashTable，返回所有 kv pair（这个接口不好）
     fn get_all(&self, table: &str) -> Result<Vec<Kvpair>, KvError>;
     /// 遍历 HashTable，返回 kv pair 的 Iterator
-    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError>;
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item=Kvpair>>, KvError>;
 }
 
 /// ----- Storate iterator Section
@@ -42,9 +42,9 @@ impl<T> StorageIter<T> {
 }
 
 impl<T> Iterator for StorageIter<T>
-where
-    T: Iterator,
-    T::Item: Into<Kvpair>,
+    where
+        T: Iterator,
+        T::Item: Into<Kvpair>,
 {
     type Item = Kvpair;
 
@@ -64,7 +64,6 @@ impl From<(String, Value)> for Kvpair {
 /// 使得 Storage trait 的实现者只需要提供它们自己的拥有所有权的 Iterator，
 /// 并对 Iterator 里的 Item 类型提供 Into<Kvpair>
 /// ----- Storate iterator Section
-
 #[cfg(test)]
 mod tests {
     use tempfile::tempdir;
@@ -149,7 +148,7 @@ mod tests {
             data,
             vec![
                 Kvpair::new("k1", "v1".into()),
-                Kvpair::new("k2", "v2".into())
+                Kvpair::new("k2", "v2".into()),
             ]
         )
     }
@@ -163,7 +162,7 @@ mod tests {
             data,
             vec![
                 Kvpair::new("k1", "v1".into()),
-                Kvpair::new("k2", "v2".into())
+                Kvpair::new("k2", "v2".into()),
             ]
         )
     }

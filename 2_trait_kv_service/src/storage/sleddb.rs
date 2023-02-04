@@ -1,5 +1,6 @@
-use sled::{Db, IVec};
 use std::{convert::TryInto, path::Path, str};
+
+use sled::{Db, IVec};
 
 use crate::{KvError, Kvpair, Storage, StorageIter, Value};
 
@@ -70,7 +71,7 @@ impl Storage for SledDb {
         Ok(result)
     }
 
-    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item=Kvpair>>, KvError> {
         let prefix = SledDb::get_table_prefix(table);
         let iter = StorageIter::new(self.0.scan_prefix(prefix));
         Ok(Box::new(iter))

@@ -1,8 +1,12 @@
+use std::sync::Arc;
+
+use tracing::debug;
+
 use crate::{
     command_request::RequestData, CommandRequest, CommandResponse, KvError, MemTable, Storage,
 };
-use std::sync::Arc;
-use tracing::debug;
+#[cfg(test)]
+use crate::{Kvpair, Value};
 
 mod command_service;
 
@@ -141,8 +145,9 @@ mod tests {
     use http::StatusCode;
     use tracing::info;
 
-    use super::*;
     use crate::{MemTable, Value};
+
+    use super::*;
 
     #[test]
     fn service_should_works() {
@@ -193,9 +198,6 @@ mod tests {
         assert_eq!(res.values, vec![Value::default()]);
     }
 }
-
-#[cfg(test)]
-use crate::{Kvpair, Value};
 
 // 测试成功返回的结果
 #[cfg(test)]

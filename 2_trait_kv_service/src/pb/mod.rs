@@ -1,13 +1,14 @@
-pub mod abi;
-
 use std::convert::TryFrom;
 
-use abi::{command_request::RequestData, *};
 use bytes::Bytes;
 use http::StatusCode;
 use prost::Message;
 
+use abi::{*, command_request::RequestData};
+
 use crate::KvError;
+
+pub mod abi;
 
 impl CommandRequest {
     pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {

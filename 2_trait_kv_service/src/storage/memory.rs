@@ -73,7 +73,6 @@ impl Storage for MemTable {
 }
 
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

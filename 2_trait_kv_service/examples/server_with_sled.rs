@@ -8,6 +8,9 @@ use tracing::info;
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
+    /// 你看，只需要在创建 KV server 时使用 SledDb，就可以实现 data store 的切换
+    /// 未来还可以进一步通过配置文件，来选择使用什么样的 store。非常方便。
+    /// 它和之前的 server 几乎一样，只有这里生成 service 的代码应用了新的 storage，并且引入了事件通知。
     let service: Service<SledDb> = ServiceInner::new(SledDb::new("/tmp/kvserver"))
         .fn_before_send(|res| match res.message.as_ref() {
             "" => res.message = "altered. Original message is empty.".into(),

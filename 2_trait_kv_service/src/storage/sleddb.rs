@@ -4,6 +4,9 @@ use sled::{Db, IVec};
 
 use crate::{KvError, Kvpair, Storage, StorageIter, Value};
 
+/// 这段代码主要就是在实现 Storage trait。
+/// 每个方法都很简单，就是在 sled 提供的功能上增加了一次封装。
+/// 如果你对代码中某个调用有疑虑，可以参考 sled 的文档。
 #[derive(Debug)]
 pub struct SledDb(Db);
 

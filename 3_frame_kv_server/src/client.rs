@@ -17,6 +17,7 @@ async fn main() -> Result<()> {
     let cmd = CommandRequest::new_hset("table1", "hello", "world".to_string().into());
 
     // 发送 HSET 命令
+    // 对客户端，我们也希望可以直接 execute() 一个命令，就能得到结果
     let data = client.execute(cmd).await?;
     info!("Got response {:?}", data);
 

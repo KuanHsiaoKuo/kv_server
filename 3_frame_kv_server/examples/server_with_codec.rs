@@ -18,6 +18,8 @@ async fn main() -> Result<()> {
         info!("Client {:?} connected", addr);
         let svc = service.clone();
         tokio::spawn(async move {
+            // let mut stream = AsyncProstStream::<_, CommandRequest, CommandResponse, _>::from(stream).for_async();
+            let mut stream = Framed::new(stream, LengthDelimitedCodec::new());
             let mut stream = Framed::new(stream, LengthDelimitedCodec::new());
             while let Some(Ok(mut buf)) = stream.next().await {
                 let cmd = CommandRequest::decode(&buf[..]).unwrap();

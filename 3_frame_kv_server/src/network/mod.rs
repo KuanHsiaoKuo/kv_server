@@ -7,8 +7,10 @@ use tracing::info;
 use crate::{CommandRequest, CommandResponse, KvError, Service};
 
 /// 处理服务器端的某个 accept 下来的 socket 的读写
+/// 服务器处理一个 TcpStream 的数据结构，
+/// 它需要包含 TcpStream，还有我们之前创建的用于处理客户端命令的 Service。
 pub struct ProstServerStream<S> {
-    inner: S,
+    inner: S, // 这里，依旧使用了泛型参数 S。未来，如果要支持 WebSocket，或者在 TCP 之上支持 TLS，它都可以让我们无需改变这一层的代码。
     service: Service,
 }
 
@@ -28,6 +30,8 @@ where
         }
     }
 
+    // 这个 process() 方法，实际上就是对 examples/server.rs 中
+    // tokio::spawn 里的 while loop 的封装
     pub async fn process(mut self) -> Result<(), KvError> {
         while let Ok(cmd) = self.recv().await {
             info!("Got a new command: {:?}", cmd);
@@ -62,6 +66,8 @@ where
         Self { inner: stream }
     }
 
+    // 对客户端，我们也希望可以直接 execute() 一个命令，就能得到结果
+    // 这个 execute()，实际上就是对 发送(fn send)和接收代码(fn recv)的封装
     pub async fn execute(&mut self, cmd: CommandRequest) -> Result<CommandResponse, KvError> {
         self.send(cmd).await?;
         Ok(self.recv().await?)

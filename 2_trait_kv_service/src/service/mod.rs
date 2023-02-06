@@ -16,17 +16,13 @@ pub trait CommandService {
     fn execute(self, store: &impl Storage) -> CommandResponse;
 }
 
-/// 事件通知（不可变事件）
+/// 事件通知（不可变事件）, 泛型trait
 pub trait Notify<Arg> {
     fn notify(&self, arg: &Arg);
 }
 
-/// 事件通知（可变事件）
-pub trait NotifyMut<Arg> {
-    fn notify(&self, arg: &mut Arg);
-}
-
 impl<Arg> Notify<Arg> for Vec<fn(&Arg)> {
+    // 内联是一种将函数调用替换为函数体的一种优化转换
     #[inline]
     fn notify(&self, arg: &Arg) {
         for f in self {
@@ -35,12 +31,33 @@ impl<Arg> Notify<Arg> for Vec<fn(&Arg)> {
     }
 }
 
+/// 事件通知（可变事件）
+pub trait NotifyMut<Arg> {
+    fn notify(&self, arg: &mut Arg);
+}
+
 impl<Arg> NotifyMut<Arg> for Vec<fn(&mut Arg)> {
     #[inline]
     fn notify(&self, arg: &mut Arg) {
         for f in self {
             f(arg)
         }
+    }
+}
+
+impl<Store: Storage> Service<Store> {
+    pub fn execute(&self, cmd: CommandRequest) -> CommandResponse {
+        debug!("Got request: {:?}", cmd);
+        self.inner.on_received.notify(&cmd);
+        let mut res = dispatch(cmd, &self.inner.store);
+        debug!("Executed response: {:?}", res);
+        self.inner.on_executed.notify(&res);
+        self.inner.on_before_send.notify(&mut res);
+        if !self.inner.on_before_send.is_empty() {
+            debug!("Modified response: {:?}", res);
+        }
+
+        res
     }
 }
 
@@ -119,22 +136,6 @@ impl<Store: Storage> ServiceInner<Store> {
     }
 }
 
-
-impl<Store: Storage> Service<Store> {
-    pub fn execute(&self, cmd: CommandRequest) -> CommandResponse {
-        debug!("Got request: {:?}", cmd);
-        self.inner.on_received.notify(&cmd);
-        let mut res = dispatch(cmd, &self.inner.store);
-        debug!("Executed response: {:?}", res);
-        self.inner.on_executed.notify(&res);
-        self.inner.on_before_send.notify(&mut res);
-        if !self.inner.on_before_send.is_empty() {
-            debug!("Modified response: {:?}", res);
-        }
-
-        res
-    }
-}
 
 // 从 Request 中得到 Response，目前处理 HGET/HGETALL/HSET
 pub fn dispatch(cmd: CommandRequest, store: &impl Storage) -> CommandResponse {

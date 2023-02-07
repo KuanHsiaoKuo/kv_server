@@ -66,7 +66,7 @@ impl TlsClientConnector {
     /// 触发 TLS 协议，把底层的 stream 转换成 TLS stream
     pub async fn connect<S>(&self, stream: S) -> Result<ClientTlsStream<S>, KvError>
     where
-        S: AsyncRead + AsyncWrite + Unpin + Send,
+        S: AsyncRead + AsyncWrite + Unpin + Send, // 接受一个满足 AsyncRead + AsyncWrite + Unpin + Send 的 stream。类似上一讲，我们不希望 TLS 代码只能接受 TcpStream，所以这里提供了一个泛型参数 S
     {
         let dns = DNSNameRef::try_from_ascii_str(self.domain.as_str())
             .map_err(|_| KvError::Internal("Invalid DNS name".into()))?;
@@ -160,6 +160,7 @@ mod tests {
         net::{TcpListener, TcpStream},
     };
 
+    // 使用了 include_str! 宏，在编译期把文件加载成字符串放在 RODATA 段
     const CA_CERT: &str = include_str!("../../fixtures/ca.cert");
     const CLIENT_CERT: &str = include_str!("../../fixtures/client.cert");
     const CLIENT_KEY: &str = include_str!("../../fixtures/client.key");

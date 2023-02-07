@@ -4,6 +4,8 @@ use tokio_stream::wrappers::ReceiverStream;
 
 use crate::{CommandResponse, Publish, Subscribe, Topic, Unsubscribe};
 
+// 因为 Stream 是一个 trait，在 trait 的方法里我们无法返回
+// 一个 impl Stream，所以用 trait object：Pin<Box\<dyn Stream>>。
 pub type StreamingResponse = Pin<Box<dyn Stream<Item = Arc<CommandResponse>> + Send>>;
 
 pub trait TopicService {
@@ -14,10 +16,14 @@ pub trait TopicService {
 impl TopicService for Subscribe {
     fn execute(self, topic: impl Topic) -> StreamingResponse {
         let rx = topic.subscribe(self.topic);
+        // 使用了 tokio-stream 的 wrapper 把一个 mpsc::Receiver
+        // 转换成 ReceiverStream。这样 Subscribe 的处理就能返回一个 Stream。
         Box::pin(ReceiverStream::new(rx))
     }
 }
 
+// 对于 Unsubscribe 和 Publish，它们都返回单个值，
+// 我们使用 stream::once 将其统一起来。
 impl TopicService for Unsubscribe {
     fn execute(self, topic: impl Topic) -> StreamingResponse {
         let res = match topic.unsubscribe(self.topic, self.id) {

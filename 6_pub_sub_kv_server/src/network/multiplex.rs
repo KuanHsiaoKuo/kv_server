@@ -11,6 +11,9 @@ pub struct YamuxCtrl<S> {
     _conn: PhantomData<S>,
 }
 
+/// 这段代码提供了 Yamux 的基本处理。
+/// 如果有些地方你看不明白，比如 WindowUpdateMode，yamux::into_stream() 等，很正常，
+/// 需要看看 yamux crate 的文档和例子。
 impl<S> YamuxCtrl<S>
 where
     S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
@@ -21,6 +24,9 @@ where
     }
 
     /// 创建 yamux 服务端，服务端我们需要具体处理 stream
+    /// 它的意思是，参数 f 是一个 FnMut 闭包，接受一个 yamux::Stream 参数，返回 Future。
+    /// 这样的结构我们之前见过，之所以接口这么复杂，是因为 Rust 还没有把 async 闭包稳定下来。
+    /// 所以，如果要想写一个 async || {}，这是最佳的方式。
     pub fn new_server<F, Fut>(stream: S, config: Option<Config>, f: F) -> Self
     where
         F: FnMut(yamux::Stream) -> Fut,

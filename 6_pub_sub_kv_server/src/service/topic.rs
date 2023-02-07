@@ -19,6 +19,10 @@ fn get_next_subscription_id() -> u32 {
     NEXT_ID.fetch_add(1, Ordering::Relaxed)
 }
 
+/// 把 CommandResponse 封装进了一个 Arc。
+/// 如果一条消息要发送给一万个客户端，那么
+/// 我们不希望这条消息被复制后，再被发送，
+/// 而是直接发送同一份数据。
 pub trait Topic: Send + Sync + 'static {
     /// 订阅某个主题
     fn subscribe(self, name: String) -> mpsc::Receiver<Arc<CommandResponse>>;

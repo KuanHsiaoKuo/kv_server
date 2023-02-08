@@ -2,6 +2,10 @@ use crate::KvError;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
+/// 你可以看到，在 Rust 下，有了 serde 的帮助，
+/// 处理任何已知格式的配置文件，是多么容易的一件事情。
+/// 我们只需要定义数据结构，并为数据结构使用 Serialize/Deserialize 派生宏，
+/// 就可以处理任何支持 serde 的数据结构。
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ServerConfig {
     pub general: GeneralConfig,

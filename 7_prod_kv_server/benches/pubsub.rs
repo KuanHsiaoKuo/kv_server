@@ -65,6 +65,8 @@ async fn start_publishers(topic: &'static str, values: &'static [&'static str]) 
 }
 
 fn pubsub(c: &mut Criterion) {
+    // 使用 jaeger 和 opentelemetry tracer
+    // 进行测量监控
     let tracer = opentelemetry_jaeger::new_pipeline()
         .with_service_name("kv-bench")
         .install_simple()
@@ -112,6 +114,10 @@ fn pubsub(c: &mut Criterion) {
     });
 
     // 进行 benchmark
+    // 对于要测试的代码，我们可以封装成一个函数进行测试。
+    // 这里因为要做 async 函数的测试，需要使用 runtime。
+    // 普通的函数不需要调用 to_async。
+    // 对于更多有关 criterion 的用法，可以参考它的文档。
     c.bench_function("publishing", move |b| {
         b.to_async(&runtime)
             .iter(|| async { start_publishers(topic, values).await })

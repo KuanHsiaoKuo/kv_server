@@ -48,6 +48,7 @@ tokio-util = { version = "0.6", features = ["codec"]}
 [build-dependencies]
 prost-build = "0.8" # 编译 protobuf
 
+#描述了性能测试的名字，它对应 benches 目录下的同名文件
 [[bench]]
 name = "pubsub"
 harness = false

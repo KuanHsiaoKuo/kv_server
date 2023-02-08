@@ -2,13 +2,13 @@ use std::io::Cursor;
 use std::sync::Arc;
 
 use tokio::io::{AsyncRead, AsyncWrite};
-use tokio_rustls::rustls::{internal::pemfile, Certificate, ClientConfig, ServerConfig};
-use tokio_rustls::rustls::{AllowAnyAuthenticatedClient, NoClientAuth, PrivateKey, RootCertStore};
-use tokio_rustls::webpki::DNSNameRef;
-use tokio_rustls::TlsConnector;
 use tokio_rustls::{
     client::TlsStream as ClientTlsStream, server::TlsStream as ServerTlsStream, TlsAcceptor,
 };
+use tokio_rustls::rustls::{Certificate, ClientConfig, internal::pemfile, ServerConfig};
+use tokio_rustls::rustls::{AllowAnyAuthenticatedClient, NoClientAuth, PrivateKey, RootCertStore};
+use tokio_rustls::TlsConnector;
+use tokio_rustls::webpki::DNSNameRef;
 use tracing::instrument;
 
 use crate::KvError;
@@ -48,16 +48,22 @@ impl TlsClientConnector {
 
         // 如果有签署服务器的 CA 证书，则加载它，这样服务器证书不在根证书链
         // 但是这个 CA 证书能验证它，也可以
+        // 1. 使用jaeger优化前
         if let Some(cert) = server_ca {
             let mut buf = Cursor::new(cert);
             config.root_store.add_pem_file(&mut buf).unwrap();
-        } else {
-            // 加载本地信任的根证书链
-            config.root_store = match rustls_native_certs::load_native_certs() {
-                Ok(store) | Err((Some(store), _)) => store,
-                Err((None, error)) => return Err(error.into()),
-            };
         }
+        // 2. 使用jaeger优化后
+        // if let Some(cert) = server_ca {
+        //     let mut buf = Cursor::new(cert);
+        //     config.root_store.add_pem_file(&mut buf).unwrap();
+        // } else {
+        //     // 加载本地信任的根证书链
+        //     config.root_store = match rustls_native_certs::load_native_certs() {
+        //         Ok(store) | Err((Some(store), _)) => store,
+        //         Err((None, error)) => return Err(error.into()),
+        //     };
+        // }
 
         Ok(Self {
             config: Arc::new(config),
@@ -68,8 +74,8 @@ impl TlsClientConnector {
     #[instrument(name = "tls_client_connect", skip_all)]
     /// 触发 TLS 协议，把底层的 stream 转换成 TLS stream
     pub async fn connect<S>(&self, stream: S) -> Result<ClientTlsStream<S>, KvError>
-    where
-        S: AsyncRead + AsyncWrite + Unpin + Send,
+        where
+            S: AsyncRead + AsyncWrite + Unpin + Send,
     {
         let dns = DNSNameRef::try_from_ascii_str(self.domain.as_str())
             .map_err(|_| KvError::Internal("Invalid DNS name".into()))?;
@@ -118,8 +124,8 @@ impl TlsServerAcceptor {
     #[instrument(name = "tls_server_accept", skip_all)]
     /// 触发 TLS 协议，把底层的 stream 转换成 TLS stream
     pub async fn accept<S>(&self, stream: S) -> Result<ServerTlsStream<S>, KvError>
-    where
-        S: AsyncRead + AsyncWrite + Unpin + Send,
+        where
+            S: AsyncRead + AsyncWrite + Unpin + Send,
     {
         let acceptor = TlsAcceptor::from(self.inner.clone());
         Ok(acceptor.accept(stream).await?)
@@ -184,15 +190,18 @@ pub mod tls_utils {
 
 #[cfg(test)]
 mod tests {
-    use super::tls_utils::tls_acceptor;
-    use crate::network::tls::tls_utils::tls_connector;
-    use anyhow::Result;
     use std::net::SocketAddr;
     use std::sync::Arc;
+
+    use anyhow::Result;
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
         net::{TcpListener, TcpStream},
     };
+
+    use crate::network::tls::tls_utils::tls_connector;
+
+    use super::tls_utils::tls_acceptor;
 
     #[tokio::test]
     async fn tls_should_work() -> Result<()> {

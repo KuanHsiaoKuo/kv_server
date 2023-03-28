@@ -1,5 +1,11 @@
 .idea
 */.idea/*
 */Cargo.lock
+*/*/Cargo.lock
 */target/*
+target/
+*.sw*
+*.lock
+*/*/.gitignore
+diff*
 
